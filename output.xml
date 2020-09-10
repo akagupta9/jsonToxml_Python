@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<testsuites>
+<testsuite tests="20">
+<testcase name="assert_bank_id_and_posting_batch_id_is_not_missing" class="cco_sdl_vault_domain" time="30.9726779460907">
+<failure message=" " type="WARNING"></failure>
+ </testcase>
+
+<testcase name="assert_each_posting_has_two_legs_credit_and_debit" class="cco_sdl_vault_domain" time="6.771744966506958">
+<failure message=" " type="WARNING"></failure>
+ </testcase>
+
+<testcase name="assert_each_posting_has_two_matching_rows" class="cco_sdl_vault_domain" time="3.020897150039673">
+<failure message=" " type="WARNING"></failure>
+ </testcase>
+
+<testcase name="assert_expected_result_src_cbs_PaymentInstruction" class="cco_sdl_vault_domain" time="20.273727893829346">
+<failure message=" " type="WARNING"></failure>
+ </testcase>
+
+<testcase name="assert_if_a_non_customer_account_is_approved" class="cco_sdl_vault_domain" time="15.741920948028564">
+<failure message=" " type="WARNING"></failure>
+ </testcase>
+
+<testcase name="assert_if_internal_account_has_valid_coa_mapping" class="cco_sdl_vault_domain" time="4.528020858764648">
+<failure message=" " type="WARNING"></failure>
+ </testcase>
+
+<testcase name="assert_valid_identification_field_used_in_ccdata_cbs_account" class="cco_sdl_vault_domain" time="2.773252248764038"> </testcase>
+
+<testcase name="assert_valid_product_name_in_postings" class="cco_sdl_vault_domain" time="2.9558959007263184"> </testcase>
+
+<testcase name="assert_combined_src_account_balance_count_matches_fact_account_eod_balances_count" class="cco_sdl_vault_domain" time="0.800152063369751"> </testcase>
+
+<testcase name="assert_dim_account_count_matches_fact_account_eod_balances_count" class="cco_sdl_vault_domain" time="0.5349938869476318"> </testcase>
+
+<testcase name="assert_eod_balances_curr_day_matches_sum_of_postings_amount_curr_day_and_eod_balances_prev_day" class="cco_sdl_vault_domain" time="0.7995340824127197"> </testcase>
+
+<testcase name="assert_expected_result_ccdata_account_dim" class="cco_sdl_vault_domain" time="0.8005239963531494"> </testcase>
+
+<testcase name="assert_expected_result_ccdata_cbs_fact_account_eod_balances" class="cco_sdl_vault_domain" time="4.630220174789429"> </testcase>
+
+<testcase name="assert_expected_result_ccdata_fact_postings" class="cco_sdl_vault_domain" time="1.0624909400939941"> </testcase>
+
+<testcase name="assert_expected_result_ccddata_cbs_fact_transaction_details" class="cco_sdl_vault_domain" time="0.7969729900360107"> </testcase>
+
+<testcase name="assert_fact_account_eod_balances_amount_credit_debit_has_positive_value" class="cco_sdl_vault_domain" time="0.5336682796478271"> </testcase>
+
+<testcase name="assert_latest_account_balance_is_used_in_fact_account_eod_balances" class="cco_sdl_vault_domain" time="4.519566059112549"> </testcase>
+
+<testcase name="assert_latest_internal_account_balance_is_used_in_fact_account_eod_balances" class="cco_sdl_vault_domain" time="0.7967398166656494"> </testcase>
+
+<testcase name="assert_valid_account_posting_instruction_is_used_in_fact_account_eod_balances" class="cco_sdl_vault_domain" time="0.7995829582214355"> </testcase>
+
+<testcase name="assert_valid_internal_account_posting_instruction_is_used_in_fact_account_eod_balances" class="cco_sdl_vault_domain" time="0.801135778427124"> </testcase>
+</testsuite>
+</testsuites>
