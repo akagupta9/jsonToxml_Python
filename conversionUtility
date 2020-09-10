@@ -1,0 +1,109 @@
+import sys
+import json;
+
+class DataFetcher_ConverterUtility:
+
+    def __init__(self, filePath):
+        self.filePath = filePath;
+        jsonFile = open(self.filePath)
+        self.jsonData = json.load(jsonFile)
+
+
+    def getTotalTestCases(self):
+         return len(self.jsonData['results'])
+
+    def getTestCasesInfo(self, testCaseIndex):
+        infoDict = {};
+        jsonResultData = self.jsonData['results'][testCaseIndex];
+        nodeData = jsonResultData['node'];
+        executionTime = jsonResultData['execution_time'];
+
+        if jsonResultData['fail']:
+            testCaseFailureStatus = True;
+        else:
+            testCaseFailureStatus = False;
+
+        if jsonResultData['error'] != None:
+            testCaseErrorMessage = jsonResultData['error'];
+        else:
+            testCaseErrorMessage = " ";
+
+        testCaseClassName = nodeData['package_name'];
+        testCaseName = nodeData['name'];
+
+        infoDict["executionTime"] = executionTime;
+        infoDict['testCaseFailureStatus'] = testCaseFailureStatus;
+        infoDict['testCaseErrorMessage'] = testCaseErrorMessage;
+        infoDict['testCaseClassName'] = testCaseClassName;
+        infoDict['testCaseName'] = testCaseName;
+        infoDict['testCaseFailureStatus'] = testCaseFailureStatus;
+        infoDict['testCaseFailureType'] = 'WARNING';
+
+        return infoDict;
+
+
+    def generateXMlFile(self):
+        xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
+        testSuitesStartTag = "<testsuites"
+        testSuitesEndTag = "</testsuites>"
+        testSuiteStartTag = "\n"+"<testsuite"
+        testSuiteEndTag = "</testsuite>"
+
+        testCaseTag = ""
+        testCaseStart = "\n" + "<testcase"
+        testCaseEnd = " </testcase>"
+        failureTagStart = "\n" + "<failure"
+        failureTagEnd = "</failure>"
+
+        testSuitesStartTag+= ">"
+
+        totalTestCasesInSuite = self.getTotalTestCases();
+        testSuiteStartTag += " tests="+"\""+str(totalTestCasesInSuite) + "\"";
+
+        for testcaseCounter in range(0,totalTestCasesInSuite):
+            testCaseInfo = self.getTestCasesInfo(testcaseCounter);
+            testCaseTag += testCaseStart
+            testCaseTag += " name="+"\""+testCaseInfo['testCaseName'] + "\"";
+            testCaseTag += " class="+"\""+ testCaseInfo['testCaseClassName']+ "\"";
+            testCaseTag += " time=" +"\""+ str(testCaseInfo['executionTime'])+ "\"" + ">";
+
+            if testCaseInfo['testCaseFailureStatus'] == True:
+                testCaseTag += failureTagStart;
+                testCaseTag += " message="+"\""+ testCaseInfo['testCaseErrorMessage']+ "\"";
+                testCaseTag += " type=" + "\""+testCaseInfo['testCaseFailureType']+ "\"";
+                testCaseTag += ">" +failureTagEnd +"\n";
+
+            testCaseTag += testCaseEnd + "\n";
+
+        testSuiteStartTag += ">"+testCaseTag;
+        testSuiteStartTag += testSuiteEndTag+"\n";
+
+        testSuitesStartTag+=testSuiteStartTag;
+        testSuitesStartTag+= testSuitesEndTag+"\n";
+
+        #print(xmlHeader+testSuitesStartTag)
+        return xmlHeader+testSuitesStartTag;
+
+
+object = DataFetcher_ConverterUtility(sys.argv[1]);
+data = object.generateXMlFile()
+xmlFile = open(".//output.xml",'w');
+xmlFile.write(data)
+xmlFile.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
