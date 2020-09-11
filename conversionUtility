@@ -1,7 +1,6 @@
 import sys
 import json;
 
-
 class DataFetcher_ConverterUtility:
 
     def __init__(self, filePath):
@@ -17,6 +16,31 @@ class DataFetcher_ConverterUtility:
     def getTotalTestCases(self):
         return len(self.jsonData['results'])
 
+    def getTotalTestSuiteExecutionTime(self):
+        totalTestCases = self.getTotalTestCases();
+        totalExecutionTime = 0;
+
+        for testCaseCounter in range(0, totalTestCases):
+            testCaseInfo = self.getTestCasesInfo(testCaseCounter);
+            executionTime = testCaseInfo['executionTime']
+            totalExecutionTime += executionTime;
+
+        return totalExecutionTime;
+
+    def getTotalFailedTestCount(self):
+        totalTestCases = self.getTotalTestCases();
+        failedTestCasesCount = 0;
+
+        for testCaseCounter in range(0, totalTestCases):
+            testCaseInfo = self.getTestCasesInfo(testCaseCounter);
+
+            ## ASSUMED : IF fail == "null" or fail == true or error != null THEN test case is failed.
+            if testCaseInfo['testCaseFailureStatus'] or testCaseInfo['testCaseErrorMessage'] != None:
+                failedTestCasesCount = failedTestCasesCount+1;
+
+        return failedTestCasesCount;
+
+
     ##########___________________ GET Test cases information and return Dictionary ____________ ########
     def getTestCasesInfo(self, testCaseIndex):
         testCaseDatDictionary = {};
@@ -24,32 +48,31 @@ class DataFetcher_ConverterUtility:
         nodeData = jsonResultData['node'];
         executionTime = jsonResultData['execution_time'];
 
-        # if jsonResultData['fail'] is None:
-        #     testCaseFailureStatus = True;
-        # else:
-        #     testCaseFailureStatus = False;
-
-        if jsonResultData['fail']:
+        ## ASSUMPTION - "fail" parameter with either "null" or "true" considered as FAILED
+        if jsonResultData['fail'] is None or jsonResultData['fail']:
             testCaseFailureStatus = True;
         else:
             testCaseFailureStatus = False;
 
+        ## Getting Error Message
         if jsonResultData['error'] != None:
-            # testCaseErrorMessage = self.sanitize(jsonResultData['error']);
-            testCaseErrorMessage = jsonResultData['error'];
+            testCaseErrorMessage = self.sanitize(jsonResultData['error']);
         else:
             testCaseErrorMessage = " ";
 
-        testCaseClassName = nodeData['package_name'];
-        testCaseName = nodeData['name'];
+        ## Getting Type Of Failure
+        if jsonResultData['error'] != None:
+            testCaseFailureType = self.sanitize(jsonResultData['error']);
+        else:
+            testCaseFailureType = " ";
 
         testCaseDatDictionary["executionTime"] = executionTime;
         testCaseDatDictionary['testCaseFailureStatus'] = testCaseFailureStatus;
         testCaseDatDictionary['testCaseErrorMessage'] = testCaseErrorMessage;
-        testCaseDatDictionary['testCaseClassName'] = testCaseClassName;
-        testCaseDatDictionary['testCaseName'] = testCaseName;
+        testCaseDatDictionary['testCaseClassName'] = nodeData['package_name'];
+        testCaseDatDictionary['testCaseName'] = nodeData['name'];
         testCaseDatDictionary['testCaseFailureStatus'] = testCaseFailureStatus;
-        testCaseDatDictionary['testCaseFailureType'] = 'WARNING';
+        testCaseDatDictionary['testCaseFailureType'] = testCaseFailureType;
 
         return testCaseDatDictionary;
 
@@ -77,8 +100,11 @@ class DataFetcher_ConverterUtility:
         testSuitesTag += TESTSUITES_STARTTAG;
         testSuitesTag += ">"
         totalTestCasesInSuite = self.getTotalTestCases();
+
         testSuiteTag += TESTSUITE_STARTTAG;
         testSuiteTag += " tests=" + "\"" + str(totalTestCasesInSuite) + "\"";
+        testSuiteTag += " failures=" + "\"" + str(self.getTotalFailedTestCount()) + "\"" ;
+        testSuiteTag += " time=" + "\"" + str(self.getTotalTestSuiteExecutionTime()) + "\"" +">" ;
 
         ### _____________ Loop Counter to iterate over all  Test Cases of a Suite ______________ ###
         for testcaseCounter in range(0, totalTestCasesInSuite):
@@ -98,14 +124,13 @@ class DataFetcher_ConverterUtility:
 
             testCaseTag += TESTCASE_ENDTAG + "\n";
 
-        testSuiteTag += ">" + testCaseTag;
+        testSuiteTag += testCaseTag;
         testSuiteTag += TESTSUITE_ENDTAG + "\n";
 
         testSuitesTag += testSuiteTag;
         testSuitesTag += TESTSUITES_ENDTAG + "\n";
 
         return XMLHEADER + testSuitesTag;
-
 
 
 ###_____________ Calling Utility _________________##
