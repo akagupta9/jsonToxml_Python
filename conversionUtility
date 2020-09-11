@@ -19,7 +19,6 @@ class DataFetcher_ConverterUtility:
     def getTotalTestSuiteExecutionTime(self):
         totalTestCases = self.getTotalTestCases();
         totalExecutionTime = 0;
-
         for testCaseCounter in range(0, totalTestCases):
             testCaseInfo = self.getTestCasesInfo(testCaseCounter);
             executionTime = testCaseInfo['executionTime']
@@ -30,7 +29,6 @@ class DataFetcher_ConverterUtility:
     def getTotalFailedTestCount(self):
         totalTestCases = self.getTotalTestCases();
         failedTestCasesCount = 0;
-
         for testCaseCounter in range(0, totalTestCases):
             testCaseInfo = self.getTestCasesInfo(testCaseCounter);
 
@@ -54,18 +52,23 @@ class DataFetcher_ConverterUtility:
         else:
             testCaseFailureStatus = False;
 
-        ## Getting Error Message
+        ## Getting Error Message - if Error Message is null, adding emptry string in XML
         if jsonResultData['error'] != None:
             testCaseErrorMessage = self.sanitize(jsonResultData['error']);
         else:
             testCaseErrorMessage = " ";
 
         ## Getting Type Of Failure
-        if jsonResultData['error'] != None:
-            testCaseFailureType = self.sanitize(jsonResultData['error']);
+        if jsonResultData['fail']:
+            testCaseFailureType = 'FAILED';
+        elif jsonResultData['warn']:
+            testCaseFailureType = 'WARNING';
+        elif jsonResultData['skip']:
+            testCaseFailureType = 'SKIPPED';
         else:
-            testCaseFailureType = " ";
+            testCaseFailureType = 'ERROR';
 
+        ## UPDATING THE DICTIONARY
         testCaseDatDictionary["executionTime"] = executionTime;
         testCaseDatDictionary['testCaseFailureStatus'] = testCaseFailureStatus;
         testCaseDatDictionary['testCaseErrorMessage'] = testCaseErrorMessage;
