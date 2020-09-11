@@ -2,7 +2,7 @@ import sys
 import json;
 
 
-class DataFetcher_ConverterUtility:
+class ConverterUtility:
 
     def __init__(self, filePath):
         self.filePath = filePath;
@@ -12,32 +12,32 @@ class DataFetcher_ConverterUtility:
     def sanitize(self, input):
         input = input.replace("&", "&amp;").replace("\"", "&quot;")
         input = input.replace("<", "&lt;").replace(">", "&gt;")
-        return input
+        return input;
 
-    def getTotalTestCases(self):
-        return len(self.jsonData['results'])
-
-    def getTotalTestSuiteExecutionTime(self):
-        totalTestCases = self.getTotalTestCases();
+    def getSuiteInfo(self):
+        testSuiteDataDictionary = {};
         totalExecutionTime = 0;
+        failedTestCasesCount = 0;
+
+        totalTestCases = len(self.jsonData['results']);
+
         for testCaseCounter in range(0, totalTestCases):
             testCaseInfo = self.getTestCasesInfo(testCaseCounter);
+
+            ## Total Execution Time
             executionTime = testCaseInfo['executionTime']
             totalExecutionTime += executionTime;
-
-        return totalExecutionTime;
-
-    def getTotalFailedTestCount(self):
-        totalTestCases = self.getTotalTestCases();
-        failedTestCasesCount = 0;
-        for testCaseCounter in range(0, totalTestCases):
-            testCaseInfo = self.getTestCasesInfo(testCaseCounter);
 
             ## ASSUMED : IF fail == "null" or fail == true or error != null THEN test case is failed.
             if testCaseInfo['testCaseFailureStatus'] or testCaseInfo['testCaseErrorMessage'] != None:
                 failedTestCasesCount = failedTestCasesCount + 1;
 
-        return failedTestCasesCount;
+        testSuiteDataDictionary["totalTestCases"] = totalTestCases;
+        testSuiteDataDictionary["totalExecutionTime"] = totalExecutionTime;
+        testSuiteDataDictionary['failedTestCasesCount'] = failedTestCasesCount;
+
+        return testSuiteDataDictionary;
+
 
     # GET Test cases information and return Dictionary
     def getTestCasesInfo(self, testCaseIndex):
@@ -79,8 +79,8 @@ class DataFetcher_ConverterUtility:
 
         return testCaseDatDictionary;
 
-    def generateXMlFile(self):
 
+    def generateXMlFile(self):
         #Constant and Variable declaration
         XMLHEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
 
@@ -102,27 +102,29 @@ class DataFetcher_ConverterUtility:
         #Initialization of Test Suites Tag and Test Suite Tag
         testSuitesTag += TESTSUITES_STARTTAG;
         testSuitesTag += ">"
-        totalTestCasesInSuite = self.getTotalTestCases();
+
+        TEST_SUITE_INFO = self.getSuiteInfo(); # Getting Suite Level Info
+        totalTestCasesInSuite = TEST_SUITE_INFO['totalTestCases'];
 
         testSuiteTag += TESTSUITE_STARTTAG;
         testSuiteTag += " tests=" + "\"" + str(totalTestCasesInSuite) + "\"";
-        testSuiteTag += " failures=" + "\"" + str(self.getTotalFailedTestCount()) + "\"";
-        testSuiteTag += " time=" + "\"" + str(self.getTotalTestSuiteExecutionTime()) + "\"" + ">";
+        testSuiteTag += " failures=" + "\"" + str(TEST_SUITE_INFO['failedTestCasesCount']) + "\"";
+        testSuiteTag += " time=" + "\"" + str(TEST_SUITE_INFO['totalExecutionTime']) + "\"" + ">";
 
         #Loop Counter to iterate over all  Test Cases of a Suite
         for testcaseCounter in range(0, totalTestCasesInSuite):
-            testCaseInfo = self.getTestCasesInfo(testcaseCounter);
+            TEST_CASE_INFO = self.getTestCasesInfo(testcaseCounter); # Getting Test Case Level Info
 
             testCaseTag += TESTCASE_STARTTAG
-            testCaseTag += " name=" + "\"" + testCaseInfo['testCaseName'] + "\"";
-            testCaseTag += " class=" + "\"" + testCaseInfo['testCaseClassName'] + "\"";
-            testCaseTag += " time=" + "\"" + str(testCaseInfo['executionTime']) + "\"" + ">";
+            testCaseTag += " name=" + "\"" + TEST_CASE_INFO['testCaseName'] + "\"";
+            testCaseTag += " class=" + "\"" + TEST_CASE_INFO['testCaseClassName'] + "\"";
+            testCaseTag += " time=" + "\"" + str(TEST_CASE_INFO['executionTime']) + "\"" + ">";
 
             #Check for Failed Test Case
-            if testCaseInfo['testCaseFailureStatus']:
+            if TEST_CASE_INFO['testCaseFailureStatus']:
                 testCaseTag += FAILURE_STARTTAG;
-                testCaseTag += " message=" + "\"" + testCaseInfo['testCaseErrorMessage'] + "\"";
-                testCaseTag += " type=" + "\"" + testCaseInfo['testCaseFailureType'] + "\"";
+                testCaseTag += " message=" + "\"" + TEST_CASE_INFO['testCaseErrorMessage'] + "\"";
+                testCaseTag += " type=" + "\"" + TEST_CASE_INFO['testCaseFailureType'] + "\"";
                 testCaseTag += ">" + FAILURE_ENDTAG + "\n";
 
             testCaseTag += TESTCASE_ENDTAG + "\n";
@@ -137,10 +139,10 @@ class DataFetcher_ConverterUtility:
 
 
 #Calling Utility
-object = DataFetcher_ConverterUtility(sys.argv[1]);
-data = object.generateXMlFile()
+object = ConverterUtility(sys.argv[1]);
+convertedData = object.generateXMlFile()
 xmlFile = open(sys.argv[2], 'w');
-xmlFile.write(data)
+xmlFile.write(convertedData)
 xmlFile.close();
 
 # Commands To Run -
