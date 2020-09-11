@@ -1,6 +1,7 @@
 import sys
 import json;
 
+
 class DataFetcher_ConverterUtility:
 
     def __init__(self, filePath):
@@ -8,15 +9,24 @@ class DataFetcher_ConverterUtility:
         jsonFile = open(self.filePath)
         self.jsonData = json.load(jsonFile)
 
+    def sanitize(self, input):
+        input = input.replace("&", "&amp;").replace("\"", "&quot;")
+        input = input.replace("<", "&lt;").replace(">", "&gt;")
+        return input
 
     def getTotalTestCases(self):
-         return len(self.jsonData['results'])
+        return len(self.jsonData['results'])
 
     def getTestCasesInfo(self, testCaseIndex):
-        infoDict = {};
+        testCaseDatDictionary = {};
         jsonResultData = self.jsonData['results'][testCaseIndex];
         nodeData = jsonResultData['node'];
         executionTime = jsonResultData['execution_time'];
+
+        # if jsonResultData['fail'] is None:
+        #     testCaseFailureStatus = True;
+        # else:
+        #     testCaseFailureStatus = False;
 
         if jsonResultData['fail']:
             testCaseFailureStatus = True;
@@ -24,6 +34,7 @@ class DataFetcher_ConverterUtility:
             testCaseFailureStatus = False;
 
         if jsonResultData['error'] != None:
+            # testCaseErrorMessage = self.sanitize(jsonResultData['error']);
             testCaseErrorMessage = jsonResultData['error'];
         else:
             testCaseErrorMessage = " ";
@@ -31,79 +42,61 @@ class DataFetcher_ConverterUtility:
         testCaseClassName = nodeData['package_name'];
         testCaseName = nodeData['name'];
 
-        infoDict["executionTime"] = executionTime;
-        infoDict['testCaseFailureStatus'] = testCaseFailureStatus;
-        infoDict['testCaseErrorMessage'] = testCaseErrorMessage;
-        infoDict['testCaseClassName'] = testCaseClassName;
-        infoDict['testCaseName'] = testCaseName;
-        infoDict['testCaseFailureStatus'] = testCaseFailureStatus;
-        infoDict['testCaseFailureType'] = 'WARNING';
+        testCaseDatDictionary["executionTime"] = executionTime;
+        testCaseDatDictionary['testCaseFailureStatus'] = testCaseFailureStatus;
+        testCaseDatDictionary['testCaseErrorMessage'] = testCaseErrorMessage;
+        testCaseDatDictionary['testCaseClassName'] = testCaseClassName;
+        testCaseDatDictionary['testCaseName'] = testCaseName;
+        testCaseDatDictionary['testCaseFailureStatus'] = testCaseFailureStatus;
+        testCaseDatDictionary['testCaseFailureType'] = 'WARNING';
 
-        return infoDict;
-
+        return testCaseDatDictionary;
 
     def generateXMlFile(self):
         xmlHeader = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
         testSuitesStartTag = "<testsuites"
         testSuitesEndTag = "</testsuites>"
-        testSuiteStartTag = "\n"+"<testsuite"
+        testSuiteStartTag = "\n" + "<testsuite"
         testSuiteEndTag = "</testsuite>"
 
         testCaseTag = ""
         testCaseStart = "\n" + "<testcase"
-        testCaseEnd = " </testcase>"
+        testCaseEnd = "</testcase>"
         failureTagStart = "\n" + "<failure"
         failureTagEnd = "</failure>"
 
-        testSuitesStartTag+= ">"
+        testSuitesStartTag += ">"
 
         totalTestCasesInSuite = self.getTotalTestCases();
-        testSuiteStartTag += " tests="+"\""+str(totalTestCasesInSuite) + "\"";
+        testSuiteStartTag += " tests=" + "\"" + str(totalTestCasesInSuite) + "\"";
 
-        for testcaseCounter in range(0,totalTestCasesInSuite):
+        for testcaseCounter in range(0, totalTestCasesInSuite):
             testCaseInfo = self.getTestCasesInfo(testcaseCounter);
             testCaseTag += testCaseStart
-            testCaseTag += " name="+"\""+testCaseInfo['testCaseName'] + "\"";
-            testCaseTag += " class="+"\""+ testCaseInfo['testCaseClassName']+ "\"";
-            testCaseTag += " time=" +"\""+ str(testCaseInfo['executionTime'])+ "\"" + ">";
+            testCaseTag += " name=" + "\"" + testCaseInfo['testCaseName'] + "\"";
+            testCaseTag += " class=" + "\"" + testCaseInfo['testCaseClassName'] + "\"";
+            testCaseTag += " time=" + "\"" + str(testCaseInfo['executionTime']) + "\"" + ">";
 
-            if testCaseInfo['testCaseFailureStatus'] == True:
+            if testCaseInfo['testCaseFailureStatus']:
                 testCaseTag += failureTagStart;
-                testCaseTag += " message="+"\""+ testCaseInfo['testCaseErrorMessage']+ "\"";
-                testCaseTag += " type=" + "\""+testCaseInfo['testCaseFailureType']+ "\"";
-                testCaseTag += ">" +failureTagEnd +"\n";
+                testCaseTag += " message=" + "\"" + testCaseInfo['testCaseErrorMessage'] + "\"";
+                testCaseTag += " type=" + "\"" + testCaseInfo['testCaseFailureType'] + "\"";
+                testCaseTag += ">" + failureTagEnd + "\n";
 
             testCaseTag += testCaseEnd + "\n";
 
-        testSuiteStartTag += ">"+testCaseTag;
-        testSuiteStartTag += testSuiteEndTag+"\n";
+        testSuiteStartTag += ">" + testCaseTag;
+        testSuiteStartTag += testSuiteEndTag + "\n";
 
-        testSuitesStartTag+=testSuiteStartTag;
-        testSuitesStartTag+= testSuitesEndTag+"\n";
+        testSuitesStartTag += testSuiteStartTag;
+        testSuitesStartTag += testSuitesEndTag + "\n";
 
-        #print(xmlHeader+testSuitesStartTag)
-        return xmlHeader+testSuitesStartTag;
+        # print(xmlHeader+testSuitesStartTag)
+        return xmlHeader + testSuitesStartTag;
 
 
 object = DataFetcher_ConverterUtility(sys.argv[1]);
 data = object.generateXMlFile()
-xmlFile = open(".//output.xml",'w');
+xmlFile = open(sys.argv[2], 'w');
 xmlFile.write(data)
-xmlFile.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+xmlFile.close();
