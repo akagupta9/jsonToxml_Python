@@ -1,6 +1,7 @@
 import sys
 import json;
 
+
 class DataFetcher_ConverterUtility:
 
     def __init__(self, filePath):
@@ -34,31 +35,30 @@ class DataFetcher_ConverterUtility:
 
             ## ASSUMED : IF fail == "null" or fail == true or error != null THEN test case is failed.
             if testCaseInfo['testCaseFailureStatus'] or testCaseInfo['testCaseErrorMessage'] != None:
-                failedTestCasesCount = failedTestCasesCount+1;
+                failedTestCasesCount = failedTestCasesCount + 1;
 
         return failedTestCasesCount;
 
-
-    ##########___________________ GET Test cases information and return Dictionary ____________ ########
+    # GET Test cases information and return Dictionary
     def getTestCasesInfo(self, testCaseIndex):
         testCaseDatDictionary = {};
         jsonResultData = self.jsonData['results'][testCaseIndex];
         nodeData = jsonResultData['node'];
         executionTime = jsonResultData['execution_time'];
 
-        ## ASSUMPTION - "fail" parameter with either "null" or "true" considered as FAILED
+        # ASSUMPTION - "fail" parameter with either "null" or "true" considered as FAILED
         if jsonResultData['fail'] is None or jsonResultData['fail']:
             testCaseFailureStatus = True;
         else:
             testCaseFailureStatus = False;
 
-        ## Getting Error Message - if Error Message is null, adding emptry string in XML
+        # Getting Error Message - if Error Message is null, adding empty string in XML Error Tag
         if jsonResultData['error'] != None:
             testCaseErrorMessage = self.sanitize(jsonResultData['error']);
         else:
             testCaseErrorMessage = " ";
 
-        ## Getting Type Of Failure
+        ## Getting Type Of Failure - If No condition matching then TYPE = ERROR
         if jsonResultData['fail']:
             testCaseFailureType = 'FAILED';
         elif jsonResultData['warn']:
@@ -81,7 +81,7 @@ class DataFetcher_ConverterUtility:
 
     def generateXMlFile(self):
 
-        ###########_______________ Constant and Variable declaration ________________ ########
+        #Constant and Variable declaration
         XMLHEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
 
         testSuitesTag = "";
@@ -99,26 +99,26 @@ class DataFetcher_ConverterUtility:
         FAILURE_STARTTAG = "\n" + "<failure"
         FAILURE_ENDTAG = "</failure>"
 
-        ### _____________ Initialization of Test Suites Tag and Test Suite Tag ______________ ###
+        #Initialization of Test Suites Tag and Test Suite Tag
         testSuitesTag += TESTSUITES_STARTTAG;
         testSuitesTag += ">"
         totalTestCasesInSuite = self.getTotalTestCases();
 
         testSuiteTag += TESTSUITE_STARTTAG;
         testSuiteTag += " tests=" + "\"" + str(totalTestCasesInSuite) + "\"";
-        testSuiteTag += " failures=" + "\"" + str(self.getTotalFailedTestCount()) + "\"" ;
-        testSuiteTag += " time=" + "\"" + str(self.getTotalTestSuiteExecutionTime()) + "\"" +">" ;
+        testSuiteTag += " failures=" + "\"" + str(self.getTotalFailedTestCount()) + "\"";
+        testSuiteTag += " time=" + "\"" + str(self.getTotalTestSuiteExecutionTime()) + "\"" + ">";
 
-        ### _____________ Loop Counter to iterate over all  Test Cases of a Suite ______________ ###
+        #Loop Counter to iterate over all  Test Cases of a Suite
         for testcaseCounter in range(0, totalTestCasesInSuite):
-
             testCaseInfo = self.getTestCasesInfo(testcaseCounter);
+
             testCaseTag += TESTCASE_STARTTAG
             testCaseTag += " name=" + "\"" + testCaseInfo['testCaseName'] + "\"";
             testCaseTag += " class=" + "\"" + testCaseInfo['testCaseClassName'] + "\"";
             testCaseTag += " time=" + "\"" + str(testCaseInfo['executionTime']) + "\"" + ">";
 
-            ### _____________ Check for Failed Test Case ______________ ###
+            #Check for Failed Test Case
             if testCaseInfo['testCaseFailureStatus']:
                 testCaseTag += FAILURE_STARTTAG;
                 testCaseTag += " message=" + "\"" + testCaseInfo['testCaseErrorMessage'] + "\"";
@@ -136,9 +136,12 @@ class DataFetcher_ConverterUtility:
         return XMLHEADER + testSuitesTag;
 
 
-###_____________ Calling Utility _________________##
+#Calling Utility
 object = DataFetcher_ConverterUtility(sys.argv[1]);
 data = object.generateXMlFile()
 xmlFile = open(sys.argv[2], 'w');
 xmlFile.write(data)
 xmlFile.close();
+
+# Commands To Run -
+# utility.py "<Inpput JSOn File Location>" "<Output File Location>"
