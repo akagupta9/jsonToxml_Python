@@ -28,8 +28,7 @@ class ConverterUtility:
             executionTime = testCaseInfo['executionTime']
             totalExecutionTime += executionTime;
 
-            ## ASSUMED : IF fail == "null" or fail == true or error != null THEN test case is failed.
-            if testCaseInfo['testCaseFailureStatus'] or testCaseInfo['testCaseErrorMessage'] != None:
+            if testCaseInfo['testCaseFailureStatus']:
                 failedTestCasesCount = failedTestCasesCount + 1;
 
         testSuiteDataDictionary["totalTestCases"] = totalTestCases;
@@ -46,17 +45,17 @@ class ConverterUtility:
         nodeData = jsonResultData['node'];
         executionTime = jsonResultData['execution_time'];
 
-        # ASSUMPTION - "fail" parameter with either "null" or "true" considered as FAILED
-        if jsonResultData['fail'] is None or jsonResultData['fail']:
-            testCaseFailureStatus = True;
-        else:
+        # ASSUMPTION - "fail" parameter with either "false" or (fail==null and error==null and warn==null) considered as FAILED
+        if (not jsonResultData['fail']) or (jsonResultData['fail'] == None and jsonResultData['error'] == None and jsonResultData['warn'] == None):
             testCaseFailureStatus = False;
+        else:
+            testCaseFailureStatus = True;
 
         # Getting Error Message - if Error Message is null, adding empty string in XML Error Tag
         if jsonResultData['error'] != None:
             testCaseErrorMessage = self.sanitize(jsonResultData['error']);
         else:
-            testCaseErrorMessage = " ";
+            testCaseErrorMessage = "Test Failed. No Predefined error message present because ERROR key is NULL in input JSON.";
 
         ## Getting Type Of Failure - If No condition matching then TYPE = ERROR
         if jsonResultData['fail']:
@@ -123,7 +122,8 @@ class ConverterUtility:
             #Check for Failed Test Case
             if TEST_CASE_INFO['testCaseFailureStatus']:
                 testCaseTag += FAILURE_STARTTAG;
-                testCaseTag += " message=" + "\"" + TEST_CASE_INFO['testCaseErrorMessage'] + "\"";
+                if TEST_CASE_INFO['testCaseErrorMessage']!=" ":
+                    testCaseTag += " message=" + "\"" + TEST_CASE_INFO['testCaseErrorMessage'] + "\"";
                 testCaseTag += " type=" + "\"" + TEST_CASE_INFO['testCaseFailureType'] + "\"";
                 testCaseTag += ">" + FAILURE_ENDTAG + "\n";
 
@@ -146,4 +146,4 @@ xmlFile.write(convertedData)
 xmlFile.close();
 
 # Commands To Run -
-# utility.py "<Inpput JSOn File Location>" "<Output File Location>"
+# utility.py "<Input JSOn File Location>" "<Output File Location>"
