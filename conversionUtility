@@ -46,7 +46,7 @@ class ConverterUtility:
         executionTime = jsonResultData['execution_time'];
 
         # ASSUMPTION - "fail" parameter with either "false" or (fail==null and error==null and warn==null) considered as FAILED
-        if (not jsonResultData['fail']) or (jsonResultData['fail'] == None and jsonResultData['error'] == None and jsonResultData['warn'] == None):
+        if (jsonResultData['fail'] == False) or (jsonResultData['fail'] == None and jsonResultData['error'] == None and jsonResultData['warn'] == None):
             testCaseFailureStatus = False;
         else:
             testCaseFailureStatus = True;
@@ -55,7 +55,7 @@ class ConverterUtility:
         if jsonResultData['error'] != None:
             testCaseErrorMessage = self.sanitize(jsonResultData['error']);
         else:
-            testCaseErrorMessage = "Test Failed. No Predefined error message present because ERROR key is NULL in input JSON.";
+            testCaseErrorMessage = "Test Failed.";
 
         ## Getting Type Of Failure - If No condition matching then TYPE = ERROR
         if jsonResultData['fail']:
